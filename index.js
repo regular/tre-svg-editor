@@ -6,6 +6,7 @@ const setStyle = require('module-styles')('tre-svg-editor')
 const Str = require('tre-string')
 const Editor = require('./editor')
 const prettify = require('./prettify')
+const optimize = require('./optimize.js')
 require('brace/mode/xml')
 
 setStyle(`
@@ -108,7 +109,13 @@ module.exports = function(ssb, opts) {
             'ev-click':()=>{
               editor.setText(prettify(svgObs()))
             }
-          }, 'Prettify')
+          }, 'Prettify'),
+          h('button', {
+            'ev-click':()=>{
+              editor.setText(optimize(svgObs()))
+            }
+          }, 'Optimize')
+
         ]),
         ctx.where == 'compact-editor' ? renderCSS(kv, ctx) : [],
         h('div', [

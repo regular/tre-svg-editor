@@ -47,6 +47,7 @@
     "mutant": "^3.22.1",
     "nxmlpp": "0.0.1",
     "pull-stream": "^3.6.9",
+    "svgo": "^2.5.0",
     "tre-string": "^1.0.1"
   }
 }

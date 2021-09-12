@@ -2,6 +2,7 @@ const ace = require('brace')
 
 module.exports = function makeEditor(pre, mode, onChange, onError, opts)  {
   const editor = ace.edit(pre)
+  editor.$blockScrolling = Infinity
   if (opts.ace_theme) editor.setTheme(opts.ace_theme)
   editor.session.setMode(`ace/mode/${mode}`)
 
