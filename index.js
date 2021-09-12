@@ -5,12 +5,26 @@ const watch = require('mutant/watch')
 const setStyle = require('module-styles')('tre-svg-editor')
 const Str = require('tre-string')
 const Editor = require('./editor')
+const prettify = require('./prettify')
 require('brace/mode/xml')
 
 setStyle(`
+  .tre-svg-editor .tre-editor-with-preview {
+    display: grid;
+    grid-rows: 1fr 64px;
+  }
   .tre-svg-editor pre.editor {
-    width: 90%;
     min-height: 200px;
+    grid-row: 1/3;
+    grid-column: 1/2;
+    z-index: 0;
+  }
+  .tre-svg-editor .tre-svg-thumbnail {
+    grid-row: 2/3;
+    grid-column: 1/2;
+    z-index: 1;
+    align-self: start;
+    pointer-events: none;
   }
 `)
 
@@ -32,13 +46,17 @@ module.exports = function(ssb, opts) {
     })
 
     if (ctx.where == 'thumbnail' || ctx.where == 'tile') {
-      return h('.tre-svg-thumbnail', {
-        innerHTML: svgObs
-      })
+      return renderThumbnail()
     } else if (ctx.where == 'editor' || ctx.where == 'compact-editor') {
       return renderEditor()
     }
     return renderCSS()
+
+    function renderThumbnail() {
+      return h('.tre-svg-thumbnail', {
+        innerHTML: svgObs
+      })
+    }
 
     function renderCSS() {
       return h('style', {
@@ -81,7 +99,17 @@ module.exports = function(ssb, opts) {
         hooks: [el => abort]
       }, [
         h('h1', renderStr(computed(nameObs, n => n ? n : 'No Name'))),
-        pre,
+        h('.tre-editor-with-preview', [
+          pre,
+          renderThumbnail(),
+        ]),
+        h('.tre-editor-button-bar', [
+          h('button', {
+            'ev-click':()=>{
+              editor.setText(prettify(svgObs()))
+            }
+          }, 'Prettify')
+        ]),
         ctx.where == 'compact-editor' ? renderCSS(kv, ctx) : [],
         h('div', [
           // move to editor shell
