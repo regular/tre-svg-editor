@@ -101,9 +101,5 @@ function styles() {
     .tre-svg-editor {
       max-width: 500px;
     }
-    .tre-svg-thumbnail>svg {
-      width: 64px;
-      height: 64px;
-    }
   `)
 }

@@ -7,12 +7,13 @@ const Str = require('tre-string')
 const Editor = require('./editor')
 const prettify = require('./prettify')
 const optimize = require('./optimize.js')
+const dataURI = require('mini-svg-data-uri')
 require('brace/mode/xml')
 
 setStyle(`
   .tre-svg-editor .tre-editor-with-preview {
     display: grid;
-    grid-rows: 1fr 64px;
+    grid-rows: 1fr auto;
   }
   .tre-svg-editor pre.editor {
     min-height: 200px;
@@ -26,6 +27,21 @@ setStyle(`
     z-index: 1;
     align-self: start;
     pointer-events: none;
+
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+
+    width: 64px;
+    height: 64px;
+    border: 1px solid blue;
+    box-sizing: border-box;
+  }
+  .tre-svg-editor .hint {
+    font-size: .75em;
+  }
+  .tre-svg-editor .hint ul {
+    list-style: none;
   }
 `)
 
@@ -41,9 +57,20 @@ module.exports = function(ssb, opts) {
     const contentObs = ctx.contentObs || Value({})
 
     const previewObs = ctx.previewObs || Value(kv)
+    const nameObs = computed(previewObs, kv => kv && kv.value.content.name)
     const svgObs = computed(previewObs, kv => kv && kv.value.content.svg || '')
-    const cssObs = computed(svgObs, svg =>{
-      return `/*\n${svg}\n*/` // TODO
+    const cssObs = computed([svgObs, nameObs], (svg, name) =>{
+      return `:root { --${name}: url("${dataURI(optimize(svg))}"); }`
+    })
+
+    const hintObs = computed(nameObs, name=>{
+      return `
+      <b>Hint:</b> To display this SVG use these CSS rules:<ul>
+        <li>background-image: var(--${name});</li>
+        <li>background-size: contain;</li>
+        <li>background-repeat: no-repeat;</li>
+        <li>background-position: center;</li>
+      </ul>`
     })
 
     if (ctx.where == 'thumbnail' || ctx.where == 'tile') {
@@ -55,7 +82,10 @@ module.exports = function(ssb, opts) {
 
     function renderThumbnail() {
       return h('.tre-svg-thumbnail', {
-        innerHTML: svgObs
+        style: {
+          'background-image': computed(nameObs, name=>`var(--${name})`)
+        }
+        //innerHTML: svgObs
       })
     }
 
@@ -68,7 +98,6 @@ module.exports = function(ssb, opts) {
     }
 
     function renderEditor() {
-      const nameObs = computed(previewObs, kv => kv && kv.value.content.name)
 
       const syntaxErrorObs = ctx.syntaxErrorObs || Value()
       const contentLengthObs = computed(contentObs, c => JSON.stringify(c).length)
@@ -114,8 +143,8 @@ module.exports = function(ssb, opts) {
             'ev-click':()=>{
               editor.setText(optimize(svgObs()))
             }
-          }, 'Optimize')
-
+          }, 'Optimize'),
+          h('.hint', {innerHTML: hintObs})
         ]),
         ctx.where == 'compact-editor' ? renderCSS(kv, ctx) : [],
         h('div', [
