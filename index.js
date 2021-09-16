@@ -60,7 +60,10 @@ module.exports = function(ssb, opts) {
     const nameObs = computed(previewObs, kv => kv && kv.value.content.name)
     const svgObs = computed(previewObs, kv => kv && kv.value.content.svg || '')
     const cssObs = computed([svgObs, nameObs], (svg, name) =>{
-      return `:root { --${name}: url("${dataURI(optimize(svg))}"); }`
+      if (!svg) return ''
+      svg = optimize(svg)
+      if (!svg) return ''
+      return `:root { --${name}: url("${dataURI(svg)}"); }`
     })
 
     const hintObs = computed(nameObs, name=>{
