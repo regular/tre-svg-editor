@@ -1,6 +1,6 @@
 {
   "name": "tre-svg-editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SVG code editor with preview",
   "scripts": {
     "test": "tape test/**"
